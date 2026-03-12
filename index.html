@@ -238,39 +238,9 @@
         .store-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
         .store-grid::-webkit-scrollbar-thumb { background: var(--neon-blue); }
 
-        /* Mobile Analog UI */
+        /* Mobile Analog UI (Dihapus/Disembunyikan sepenuhnya sesuai permintaan) */
         .joystick-container {
-            position: absolute;
-            bottom: max(15px, env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: rgba(0, 243, 255, 0.05);
-            border: 2px solid rgba(0, 243, 255, 0.3);
-            pointer-events: auto;
-            touch-action: none;
-            z-index: 50;
-            display: none; /* Disembunyikan secara default untuk desktop */
-        }
-        #joystick-knob {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(0, 243, 255, 0.6);
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px var(--neon-blue);
-            pointer-events: none;
-        }
-
-        /* Show joystick on mobile */
-        @media (max-width: 800px) {
-            .joystick-container { display: block; }
-            .hud-bottom > div:first-child { display: none; } /* Sembunyikan teks panduan desktop di mobile */
+            display: none !important;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -309,7 +279,7 @@
         </div>
 
         <div class="hud-bottom">
-            <div style="opacity: 0.7; max-width: 150px;">CONTROLS: DRAG TO MOVE / USE JOYSTICK | AUTO-FIRE</div>
+            <div style="opacity: 0.7; max-width: 150px;">CONTROLS: DRAG SCREEN TO MOVE | AUTO-FIRE</div>
             <div class="skills-container">
                 <div id="btn-shield" class="skill-btn ready">
                     <span class="key">[Q]</span><span class="name">SHIELD</span>
@@ -338,7 +308,7 @@
         </div>
         
         <div class="controls-info">
-            <p>Drag screen/mouse or use Analog to control.</p>
+            <p>Swipe/Drag anywhere on the screen to move.</p>
             <p>Utilize [Q] SHIELD and [E] EMP BLAST to survive.</p>
             <p class="warning">WARNING: EPIC BOSS APPROACHES EVERY 5 WAVES.</p>
         </div>
@@ -554,8 +524,12 @@
         // Input Handling
         const mouse = new THREE.Vector2(); const targetPosition = new THREE.Vector3();
         let isInteracting = false;
-        let joyActive = false;
-        let joyPos = { x: 0, y: 0 };
+        
+        // Relative Drag State untuk Mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let initialPlayerPosX = 0;
+        let initialPlayerPosY = 0;
 
         const COLOR_PLAYER = 0x00f3ff;
         const COLOR_BULLET = 0xffffff;
@@ -631,10 +605,11 @@
                 camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
             });
             
-            // SCREEN DRAG LOGIC
-            const handleMove = (x, y) => {
+            // SCREEN DRAG LOGIC (Relative untuk Touch, Absolute untuk Mouse Desktop)
+            const handleMouseMove = (x, y) => {
                 if (!isPlaying || player.isDead || isViewingCharacter) return;
                 isInteracting = true;
+                // Untuk mouse desktop, tetap gunakan absolute positioning agar akurat mengikuti kursor
                 mouse.x = (x / window.innerWidth) * 2 - 1; mouse.y = -(y / window.innerHeight) * 2 + 1;
                 const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5); vector.unproject(camera);
                 const dir = vector.sub(camera.position).normalize(); const distance = -camera.position.z / dir.z;
@@ -649,19 +624,54 @@
                     targetViewerRotX += (e.clientY - viewerPrevY) * 0.01;
                     viewerPrevX = e.clientX; viewerPrevY = e.clientY;
                 } else {
-                    handleMove(e.clientX, e.clientY);
+                    handleMouseMove(e.clientX, e.clientY);
                 }
             });
 
-            window.addEventListener('touchmove', (e) => { 
-                if(e.target.closest('.store-grid') || e.target.closest('#joystick-zone') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
-                e.preventDefault(); 
-                if (isViewingCharacter && isDraggingViewer) {
-                    targetViewerRotY += (e.touches[0].clientX - viewerPrevX) * 0.01;
-                    targetViewerRotX += (e.touches[0].clientY - viewerPrevY) * 0.01;
-                    viewerPrevX = e.touches[0].clientX; viewerPrevY = e.touches[0].clientY;
+            // RELATIVE DRAGGING UNTUK TOUCH (Mobile)
+            window.addEventListener('touchstart', (e) => { 
+                if(e.target.closest('.store-grid') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
+                if (!isViewingCharacter) e.preventDefault(); 
+                
+                const touch = e.touches[0];
+                if (isViewingCharacter) {
+                    isDraggingViewer = true; 
+                    viewerPrevX = touch.clientX; viewerPrevY = touch.clientY;
                 } else {
-                    handleMove(e.touches[0].clientX, e.touches[0].clientY); 
+                    isInteracting = true;
+                    // Simpan koordinat jari pertama kali menyentuh layar
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    // Simpan posisi 3D Gajah saat ini sebagai titik awal pergeseran
+                    initialPlayerPosX = targetPosition.x;
+                    initialPlayerPosY = targetPosition.y;
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => { 
+                if(e.target.closest('.store-grid') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
+                e.preventDefault(); 
+                
+                const touch = e.touches[0];
+                if (isViewingCharacter && isDraggingViewer) {
+                    targetViewerRotY += (touch.clientX - viewerPrevX) * 0.01;
+                    targetViewerRotX += (touch.clientY - viewerPrevY) * 0.01;
+                    viewerPrevX = touch.clientX; viewerPrevY = touch.clientY;
+                } else if (isPlaying && !player.isDead && isInteracting) {
+                    // Hitung seberapa jauh jari telah bergeser dari titik awal (dalam pixel layar)
+                    const deltaX = touch.clientX - touchStartX;
+                    const deltaY = touch.clientY - touchStartY;
+                    
+                    // Konversi pixel layar ke unit ruang 3D (Multiplier bisa disesuaikan agar sensitivitasnya pas)
+                    const sensitivitas = 0.05; 
+                    
+                    targetPosition.x = initialPlayerPosX + (deltaX * sensitivitas);
+                    // Arah Y di layar berlawanan dengan arah Y di koordinat 3D
+                    targetPosition.y = initialPlayerPosY - (deltaY * sensitivitas);
+                    
+                    // Batasi agar Gajah tidak keluar layar
+                    targetPosition.x = Math.max(-BOUNDARY_X, Math.min(BOUNDARY_X, targetPosition.x));
+                    targetPosition.y = Math.max(-BOUNDARY_Y + 5, Math.min(BOUNDARY_Y, targetPosition.y));
                 }
             }, { passive: false });
 
@@ -669,66 +679,11 @@
                 if (isViewingCharacter) { isDraggingViewer = true; viewerPrevX = e.clientX; viewerPrevY = e.clientY; }
             });
             window.addEventListener('mouseup', () => { isDraggingViewer = false; });
-
-            window.addEventListener('touchstart', (e) => { 
-                if(e.target.closest('.store-grid') || e.target.closest('#joystick-zone') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
-                if (!isViewingCharacter) e.preventDefault(); 
-                if (isViewingCharacter) {
-                    isDraggingViewer = true; 
-                    viewerPrevX = e.touches[0].clientX; viewerPrevY = e.touches[0].clientY;
-                } else {
-                    handleMove(e.touches[0].clientX, e.touches[0].clientY); 
-                }
-            }, { passive: false });
-            window.addEventListener('touchend', () => { isDraggingViewer = false; });
+            window.addEventListener('touchend', () => { 
+                isDraggingViewer = false; 
+                isInteracting = false; // Optional: membuat gajah berhenti miring saat jari dilepas
+            });
             
-            // ANALOG JOYSTICK LOGIC
-            const jZone = document.getElementById('joystick-zone');
-            const jKnob = document.getElementById('joystick-knob');
-            let jOrigin = {x: 0, y: 0};
-
-            jZone.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (!isPlaying || player.isDead) return;
-                joyActive = true;
-                isInteracting = true; // Anggap interaksi aktif
-                const touch = e.changedTouches[0];
-                const rect = jZone.getBoundingClientRect();
-                jOrigin.x = rect.left + rect.width / 2;
-                jOrigin.y = rect.top + rect.height / 2;
-                updateJoy(touch.clientX, touch.clientY);
-            }, {passive: false});
-
-            jZone.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                if (!joyActive || !isPlaying || player.isDead) return;
-                const touch = e.changedTouches[0];
-                updateJoy(touch.clientX, touch.clientY);
-            }, {passive: false});
-
-            const endJoy = (e) => {
-                if (e) e.preventDefault();
-                joyActive = false;
-                jKnob.style.transform = `translate(-50%, -50%)`;
-                joyPos = {x: 0, y: 0};
-            };
-            jZone.addEventListener('touchend', endJoy);
-            jZone.addEventListener('touchcancel', endJoy);
-
-            function updateJoy(clientX, clientY) {
-                let dx = clientX - jOrigin.x;
-                let dy = clientY - jOrigin.y;
-                const distance = Math.sqrt(dx*dx + dy*dy);
-                const maxDist = 30; // Batas radius joystick
-                if (distance > maxDist) {
-                    dx = (dx / distance) * maxDist;
-                    dy = (dy / distance) * maxDist;
-                }
-                jKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-                joyPos.x = dx / maxDist;
-                joyPos.y = dy / maxDist;
-            }
-
             // Cheat code logic
             let cheatBuffer = "";
             let lastCheatTime = 0;
@@ -1713,7 +1668,7 @@
                     elephantGroup.earL.rotation.y = -0.3 + Math.sin(timeNow * 4) * 0.25; 
                     elephantGroup.earR.rotation.y = 0.3 - Math.sin(timeNow * 4) * 0.25; 
                     
-                    if (isInteracting || joyActive) {
+                    if (isInteracting) {
                         elephantGroup.leg1.position.z = 1 + Math.sin(timeNow * 8) * 0.2;
                         elephantGroup.leg2.position.z = 1 - Math.sin(timeNow * 8) * 0.2;
                         elephantGroup.leg3.position.z = -1 - Math.sin(timeNow * 8) * 0.2;
@@ -1724,23 +1679,14 @@
                     }
                 }
 
-                // Player Movement (Kombinasi Drag Atau Joystick)
-                if (joyActive) {
-                    // Logic Movement Analog Sensitif
-                    const analogSpeed = 50 * dt; 
-                    targetPosition.x += joyPos.x * analogSpeed;
-                    targetPosition.y -= joyPos.y * analogSpeed; // Y dibalik krn origin CSS vs 3D
-                    
-                    // Clamp posisi agar tetap dalam boundary
-                    targetPosition.x = Math.max(-BOUNDARY_X, Math.min(BOUNDARY_X, targetPosition.x));
-                    targetPosition.y = Math.max(-BOUNDARY_Y + 5, Math.min(BOUNDARY_Y, targetPosition.y));
-                }
-                
-                if (isInteracting || joyActive) {
+                // Player Movement (Dilepas joystick-nya, hanya mengandalkan isInteracting)
+                if (isInteracting) {
                     player.mesh.position.lerp(targetPosition, 10 * dt);
+                    player.mesh.rotation.z = THREE.MathUtils.lerp(player.mesh.rotation.z, (targetPosition.x - player.mesh.position.x) * -0.1, 10 * dt);
+                } else {
+                    // Kembalikan rotasi ke lurus jika tidak ada interaksi
+                    player.mesh.rotation.z = THREE.MathUtils.lerp(player.mesh.rotation.z, 0, 10 * dt);
                 }
-                
-                player.mesh.rotation.z = THREE.MathUtils.lerp(player.mesh.rotation.z, (targetPosition.x - player.mesh.position.x) * -0.1, 10 * dt);
                 player.mesh.rotation.x = 0.0; 
 
                 // UPDATE PARTNERS (NAGA CINA PANJANG, FLEKSIBEL & ANTI-COPOT)
@@ -2089,9 +2035,8 @@
             document.getElementById('ui-layer').classList.remove('hidden');
             
             const maxHp = 100 + (upgrades.health * 20);
-            score = 0; wave = 1; playerHealth = maxHp; enemySpawnRate = 1.0; isInteracting = false;
-            joyActive = false;
-            joyPos = { x: 0, y: 0 };
+            score = 0; wave = 1; playerHealth = maxHp; enemySpawnRate = 1.0; 
+            isInteracting = false;
             
             skills.shield.cd = 0; skills.emp.cd = 0;
             updateSkillUI('shield'); updateSkillUI('emp');
@@ -2145,14 +2090,13 @@
         function pauseGame() {
             if (!isPlaying || activeBoss?.state === 'exploding' || player.isDead) return;
             isPlaying = false;
-            joyActive = false; // Reset analog saat pause
-            document.getElementById('joystick-knob').style.transform = `translate(-50%, -50%)`;
+            isInteracting = false; 
             document.getElementById('pause-screen').classList.remove('hidden');
         }
 
         function gameOver() {
             isPlaying = false;
-            joyActive = false;
+            isInteracting = false;
 
             const earned = Math.floor(score / 10);
             credits += earned;
