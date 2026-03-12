@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PROJECT: OMEGA - UNLEASHED</title>
     <style>
         :root {
@@ -36,7 +36,8 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 20px;
+            /* Padding dengan Safe Area untuk menghindari Notch di HP */
+            padding: max(15px, env(safe-area-inset-top)) 15px max(15px, env(safe-area-inset-bottom)) 15px;
             box-sizing: border-box;
             color: var(--neon-blue);
             text-shadow: 0 0 5px var(--neon-blue);
@@ -44,7 +45,7 @@
         .hud-top {
             display: flex;
             justify-content: space-between;
-            font-size: 1.5rem;
+            font-size: 1.1rem; /* Diperkecil agar ramah seluler */
             font-weight: bold;
             text-transform: uppercase;
         }
@@ -52,12 +53,12 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             width: 100%;
         }
         #health-bar-container {
-            width: 200px;
-            height: 15px;
+            width: 150px; /* Sedikit diperkecil */
+            height: 12px;
             border: 2px solid var(--neon-blue);
             box-shadow: 0 0 10px var(--neon-blue);
             margin-top: 5px;
@@ -75,15 +76,16 @@
         /* Boss UI */
         #boss-ui {
             position: absolute;
-            top: 60px; left: 50%;
+            top: calc(env(safe-area-inset-top, 15px) + 35px); /* Menghindari tabrakan atas */
+            left: 50%;
             transform: translateX(-50%);
             text-align: center;
             width: 60%;
             display: none;
         }
-        #boss-ui h3 { margin: 0 0 5px 0; color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); font-size: 1.5rem; animation: pulse 1s infinite;}
+        #boss-ui h3 { margin: 0 0 5px 0; color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); font-size: 1.1rem; animation: pulse 1s infinite;}
         #boss-hp-container {
-            width: 100%; height: 20px;
+            width: 100%; height: 15px;
             border: 2px solid var(--neon-red);
             background: rgba(255,0,60,0.2);
         }
@@ -97,11 +99,11 @@
         /* Skills UI */
         .skills-container {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             pointer-events: auto;
         }
         .skill-btn {
-            width: 60px; height: 60px;
+            width: 50px; height: 50px; /* Diperkecil agar rapi */
             border: 2px solid var(--neon-blue);
             border-radius: 50%;
             background: rgba(0, 243, 255, 0.1);
@@ -114,8 +116,8 @@
             box-shadow: 0 0 10px var(--neon-blue);
             backdrop-filter: blur(5px);
         }
-        .skill-btn span.key { font-size: 0.6rem; color: var(--neon-blue); margin-bottom: 2px;}
-        .skill-btn span.name { font-size: 0.8rem; }
+        .skill-btn span.key { font-size: 0.5rem; color: var(--neon-blue); margin-bottom: 2px;}
+        .skill-btn span.name { font-size: 0.7rem; }
         .skill-cooldown {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
             background: rgba(255, 0, 60, 0.7);
@@ -209,8 +211,8 @@
         /* Pause UI */
         #pause-btn {
             background: transparent; border: none;
-            color: var(--neon-blue); padding: 10px; font-weight: bold; cursor: pointer;
-            font-size: 1.5rem; text-shadow: 0 0 10px var(--neon-blue);
+            color: var(--neon-blue); padding: 5px; font-weight: bold; cursor: pointer;
+            font-size: 1.1rem; text-shadow: 0 0 10px var(--neon-blue);
             transition: all 0.2s; font-family: inherit; letter-spacing: 2px;
         }
         #pause-btn:hover, #pause-btn:active { 
@@ -235,6 +237,41 @@
         .store-grid::-webkit-scrollbar { width: 8px; }
         .store-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
         .store-grid::-webkit-scrollbar-thumb { background: var(--neon-blue); }
+
+        /* Mobile Analog UI */
+        .joystick-container {
+            position: absolute;
+            bottom: max(15px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            pointer-events: auto;
+            touch-action: none;
+            z-index: 50;
+            display: none; /* Disembunyikan secara default untuk desktop */
+        }
+        #joystick-knob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 243, 255, 0.6);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--neon-blue);
+            pointer-events: none;
+        }
+
+        /* Show joystick on mobile */
+        @media (max-width: 800px) {
+            .joystick-container { display: block; }
+            .hud-bottom > div:first-child { display: none; } /* Sembunyikan teks panduan desktop di mobile */
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -260,14 +297,19 @@
 
             <!-- Wave & Pause menyatu dengan rapi di pojok kanan -->
             <div style="text-align: right; pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end;">
-                <button id="pause-btn" style="margin-bottom: 5px; padding: 0; font-size: 1.2rem;">|| PAUSE</button>
+                <button id="pause-btn" style="margin-bottom: 5px; padding: 0;">|| PAUSE</button>
                 <div>WAVE: <span id="wave">1</span></div>
                 <span id="fps" style="font-size: 0.8rem; color: #666;">FPS: 60</span>
             </div>
         </div>
 
+        <!-- Virtual Joystick for Mobile -->
+        <div class="joystick-container" id="joystick-zone">
+            <div id="joystick-knob"></div>
+        </div>
+
         <div class="hud-bottom">
-            <div style="opacity: 0.7;">CONTROLS: DRAG TO MOVE | AUTO-FIRE</div>
+            <div style="opacity: 0.7; max-width: 150px;">CONTROLS: DRAG TO MOVE / USE JOYSTICK | AUTO-FIRE</div>
             <div class="skills-container">
                 <div id="btn-shield" class="skill-btn ready">
                     <span class="key">[Q]</span><span class="name">SHIELD</span>
@@ -284,7 +326,7 @@
     <!-- Main Menu -->
     <div id="menu-screen" class="screen">
         <h1>PROJECT: OMEGA<br>CYBER-ELEPHANT</h1>
-        <p style="color: var(--neon-blue); letter-spacing: 2px;">V5.0: POINT-CLOUD HOLOGRAM PROTOCOL</p>
+        <p style="color: var(--neon-blue); letter-spacing: 2px;">V5.1: MOBILE OPTIMIZED \w DRAGON PROTOCOL</p>
         <h3 style="color: var(--neon-blue); margin-top: -10px;">HIGH SCORE: <span id="menu-highscore">0</span></h3>
         <h2 style="color: gold; margin-bottom: 0;">CREDITS: <span id="menu-credits">0</span></h2>
         
@@ -296,7 +338,7 @@
         </div>
         
         <div class="controls-info">
-            <p>Drag screen/mouse to control the Holographic Elephant.</p>
+            <p>Drag screen/mouse or use Analog to control.</p>
             <p>Utilize [Q] SHIELD and [E] EMP BLAST to survive.</p>
             <p class="warning">WARNING: EPIC BOSS APPROACHES EVERY 5 WAVES.</p>
         </div>
@@ -337,7 +379,7 @@
             <button id="view-dragon-btn" class="main-btn" style="font-size: 1rem; padding: 10px 20px;">DRAGON</button>
             <button id="view-mouse-btn" class="main-btn" style="font-size: 1rem; padding: 10px 20px;">NEON MOUSE</button>
         </div>
-        <button id="close-viewer-btn" class="main-btn" style="position: absolute; bottom: 20px; border-color: var(--neon-red); color: var(--neon-red); pointer-events: auto;">BACK TO MENU</button>
+        <button id="close-viewer-btn" class="main-btn" style="position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); border-color: var(--neon-red); color: var(--neon-red); pointer-events: auto;">BACK TO MENU</button>
     </div>
 
     <!-- Pause Screen -->
@@ -359,8 +401,8 @@
         let upgrades = JSON.parse(localStorage.getItem('omega_upgrades')) || {
             health: 0, armor: 0, damage: 0, bulletSize: 0, multishot: 0, partner: 0
         };
-        if (upgrades.partner === undefined) upgrades.partner = 0; // Fallback for old save data
-        if (upgrades.fireRate !== undefined) delete upgrades.fireRate; // Remove unused fireRate upgrade
+        if (upgrades.partner === undefined) upgrades.partner = 0; 
+        if (upgrades.fireRate !== undefined) delete upgrades.fireRate; 
         
         const UPGRADE_DATA = {
             health: { name: "HULL INTEGRITY (MAX HP)", max: 10, cost: (lvl) => 100 * (lvl + 1) },
@@ -368,7 +410,7 @@
             damage: { name: "PLASMA OUTPUT (DMG)", max: 10, cost: (lvl) => 200 * (lvl + 1) },
             bulletSize: { name: "CALIBER EXPANSION (SIZE)", max: 5, cost: (lvl) => 150 * (lvl + 1) },
             multishot: { name: "SPREAD MODULE (MULTI-SHOT)", max: 4, cost: (lvl) => 500 * (lvl + 1) },
-            partner: { name: "DRAGON-RIDER MOUSE (PARTNER)", max: 3, cost: (lvl) => 1000 * (lvl + 1) }
+            partner: { name: "DRAGON-RIDER MOUSE (PARTNER)", max: 3, cost: (lvl) => 15000 * Math.pow(2, lvl) }
         };
 
         function saveProgress() {
@@ -509,8 +551,11 @@
         let viewerPrevX = 0; let viewerPrevY = 0;
         let targetViewerRotY = 0; let targetViewerRotX = 0.2;
 
+        // Input Handling
         const mouse = new THREE.Vector2(); const targetPosition = new THREE.Vector3();
         let isInteracting = false;
+        let joyActive = false;
+        let joyPos = { x: 0, y: 0 };
 
         const COLOR_PLAYER = 0x00f3ff;
         const COLOR_BULLET = 0xffffff;
@@ -586,6 +631,7 @@
                 camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
             });
             
+            // SCREEN DRAG LOGIC
             const handleMove = (x, y) => {
                 if (!isPlaying || player.isDead || isViewingCharacter) return;
                 isInteracting = true;
@@ -608,7 +654,7 @@
             });
 
             window.addEventListener('touchmove', (e) => { 
-                if(e.target.closest('.store-grid') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
+                if(e.target.closest('.store-grid') || e.target.closest('#joystick-zone') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
                 e.preventDefault(); 
                 if (isViewingCharacter && isDraggingViewer) {
                     targetViewerRotY += (e.touches[0].clientX - viewerPrevX) * 0.01;
@@ -625,7 +671,7 @@
             window.addEventListener('mouseup', () => { isDraggingViewer = false; });
 
             window.addEventListener('touchstart', (e) => { 
-                if(e.target.closest('.store-grid') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
+                if(e.target.closest('.store-grid') || e.target.closest('#joystick-zone') || e.target.tagName.toLowerCase() === 'button' || e.target.closest('.skill-btn') || e.target.closest('button')) return;
                 if (!isViewingCharacter) e.preventDefault(); 
                 if (isViewingCharacter) {
                     isDraggingViewer = true; 
@@ -636,10 +682,56 @@
             }, { passive: false });
             window.addEventListener('touchend', () => { isDraggingViewer = false; });
             
+            // ANALOG JOYSTICK LOGIC
+            const jZone = document.getElementById('joystick-zone');
+            const jKnob = document.getElementById('joystick-knob');
+            let jOrigin = {x: 0, y: 0};
+
+            jZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!isPlaying || player.isDead) return;
+                joyActive = true;
+                isInteracting = true; // Anggap interaksi aktif
+                const touch = e.changedTouches[0];
+                const rect = jZone.getBoundingClientRect();
+                jOrigin.x = rect.left + rect.width / 2;
+                jOrigin.y = rect.top + rect.height / 2;
+                updateJoy(touch.clientX, touch.clientY);
+            }, {passive: false});
+
+            jZone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!joyActive || !isPlaying || player.isDead) return;
+                const touch = e.changedTouches[0];
+                updateJoy(touch.clientX, touch.clientY);
+            }, {passive: false});
+
+            const endJoy = (e) => {
+                if (e) e.preventDefault();
+                joyActive = false;
+                jKnob.style.transform = `translate(-50%, -50%)`;
+                joyPos = {x: 0, y: 0};
+            };
+            jZone.addEventListener('touchend', endJoy);
+            jZone.addEventListener('touchcancel', endJoy);
+
+            function updateJoy(clientX, clientY) {
+                let dx = clientX - jOrigin.x;
+                let dy = clientY - jOrigin.y;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                const maxDist = 30; // Batas radius joystick
+                if (distance > maxDist) {
+                    dx = (dx / distance) * maxDist;
+                    dy = (dy / distance) * maxDist;
+                }
+                jKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                joyPos.x = dx / maxDist;
+                joyPos.y = dy / maxDist;
+            }
+
+            // Cheat code logic
             let cheatBuffer = "";
             let lastCheatTime = 0;
-
-            // Skill Keybinds
             window.addEventListener('keydown', (e) => {
                 if(!isPlaying && document.getElementById('store-screen').classList.contains('hidden')) return;
                 
@@ -648,14 +740,12 @@
                     if(e.key.toLowerCase() === 'e') activateEMP();
                 }
                 
-                // Cheat code logic
                 const now = Date.now();
                 if (now - lastCheatTime > 5000) cheatBuffer = "";
                 cheatBuffer += e.key.toLowerCase();
                 lastCheatTime = now;
                 if (cheatBuffer.includes("leonita")) {
                     if (!document.getElementById('store-screen').classList.contains('hidden')) {
-                        // Cheat saat berada di menu upgrade
                         credits += 999999;
                         saveProgress();
                         renderStore();
@@ -707,6 +797,32 @@
             group.tuskL = addPart(new THREE.ConeGeometry(0.1, 1.5, 8), new THREE.Vector3(0.5, -0.2, -2.8), -Math.PI/2 - 0.2);
             group.tuskR = addPart(new THREE.ConeGeometry(0.1, 1.5, 8), new THREE.Vector3(-0.5, -0.2, -2.8), -Math.PI/2 - 0.2);
 
+            // Crescent Moon - Melayang di luar dahi dan lebih melingkar
+            const moonShape = new THREE.Shape();
+            moonShape.moveTo(0, 0.4); 
+            moonShape.absarc(0, 0, 0.4, Math.PI / 2, Math.PI * 1.8, false); // Lingkaran luar lebih besar
+            moonShape.bezierCurveTo(-0.25, -0.2, -0.25, 0.2, 0, 0.4); // Cekungan dalam yang sangat dalam agar terlihat melingkar
+            
+            const extrudeSettings = { depth: 0.05, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 2 };
+            const moonGeo = new THREE.ExtrudeGeometry(moonShape, extrudeSettings);
+            moonGeo.center(); 
+            
+            const moonMatSolid = new THREE.MeshLambertMaterial({ color: 0x222200 });
+            const moonMatWire = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true, transparent: true, opacity: 1.0 });
+            group.moon = new THREE.Mesh(moonGeo, moonMatSolid);
+            group.moon.add(new THREE.Mesh(moonGeo, moonMatWire));
+            
+            // Diposisikan lebih maju ke depan dahi agar tidak tenggelam di dalam kepala
+            group.moon.position.set(0, 1.0, -2.75); 
+            // Dimiringkan sedikit agar rata dengan permukaan dahi
+            group.moon.rotation.x = 0; 
+            group.add(group.moon);
+
+            // Cahaya kuning yang memancar dari bulan sabit
+            const moonLight = new THREE.PointLight(0xffff00, 1.5, 10);
+            moonLight.position.set(0, 1.0, -2.85);
+            group.add(moonLight);
+
             // Aiming Reticle (Laser Sight)
             const laserGeo = new THREE.CylinderGeometry(0.08, 0.02, 100, 8);
             const laserMat = new THREE.MeshBasicMaterial({ color: 0xff003c, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
@@ -715,7 +831,7 @@
             laserSight.position.set(0, -0.5, -50);
             group.add(laserSight);
 
-            // Shield Sphere (Hidden by default)
+            // Shield Sphere
             const shieldGeo = new THREE.SphereGeometry(3.5, 16, 16);
             const shieldMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.3, wireframe: true });
             group.shieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
@@ -816,7 +932,7 @@
             return group;
         }
 
-        // Membangun Hanya Model Tikus untuk Game/Viewer
+        // Membangun Hanya Model Tikus untuk Game/Viewer (Gaya Mickey Mouse dengan Siku)
         function buildMouseOnlyMesh() {
             const group = new THREE.Group();
             const mouseMatSolid = new THREE.MeshLambertMaterial({ color: 0x220011 });
@@ -829,29 +945,134 @@
                 return mesh;
             }
 
-            const mouseBodyGeo = new THREE.SphereGeometry(0.5, 8, 8);
-            const mouseBody = createSegment(mouseBodyGeo, mouseMatSolid, mouseMatWire);
-            mouseBody.position.set(0, 0, 0); 
-            
-            const earGeo = new THREE.SphereGeometry(0.25, 8, 8);
-            const earL = createSegment(earGeo, mouseMatSolid, mouseMatWire);
-            earL.position.set(0.35, 0.35, -0.1); mouseBody.add(earL);
-            const earR = createSegment(earGeo, mouseMatSolid, mouseMatWire);
-            earR.position.set(-0.35, 0.35, -0.1); mouseBody.add(earR);
+            // Head (Kepala Tegak, Bulat Sempurna)
+            const headGeo = new THREE.SphereGeometry(0.3, 16, 16);
+            const head = createSegment(headGeo, mouseMatSolid, mouseMatWire);
+            head.position.set(0, 0.35, 0); 
+            group.add(head);
 
-            const mEyeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+            // Body (Tubuh Oval)
+            const bodyGeo = new THREE.SphereGeometry(0.25, 16, 16);
+            bodyGeo.scale(1, 1.2, 1);
+            const body = createSegment(bodyGeo, mouseMatSolid, mouseMatWire);
+            body.position.set(0, -0.05, 0);
+            group.add(body);
+            
+            // Snout (Moncong)
+            const snoutGeo = new THREE.SphereGeometry(0.15, 12, 12);
+            const snout = createSegment(snoutGeo, mouseMatSolid, mouseMatWire);
+            snout.position.set(0, 0.3, -0.3); // Menghadap ke depan dari kepala tegak
+            group.add(snout);
+
+            // Nose
+            const noseGeo = new THREE.SphereGeometry(0.06, 8, 8);
+            const nose = createSegment(noseGeo, mouseMatSolid, mouseMatWire);
+            nose.position.set(0, 0.32, -0.45);
+            group.add(nose);
+            
+            // Ears (Telinga Bundar Ikonik Mickey)
+            const earGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.05, 16);
+            const earL = createSegment(earGeo, mouseMatSolid, mouseMatWire);
+            earL.position.set(0.25, 0.6, 0); // Tegak di atas
+            earL.rotation.x = Math.PI / 2;
+            earL.rotation.y = -Math.PI / 8;
+            group.add(earL);
+            
+            const earR = createSegment(earGeo, mouseMatSolid, mouseMatWire);
+            earR.position.set(-0.25, 0.6, 0);
+            earR.rotation.x = Math.PI / 2;
+            earR.rotation.y = Math.PI / 8;
+            group.add(earR);
+
+            // Eyes (Mata Putih Menyala)
+            const mEyeGeo = new THREE.BoxGeometry(0.08, 0.12, 0.05);
             const mEyeMat = new THREE.MeshBasicMaterial({color: 0xffffff});
-            const mEyeL = new THREE.Mesh(mEyeGeo, mEyeMat); mEyeL.position.set(0.2, 0.2, -0.4); mouseBody.add(mEyeL);
-            const mEyeR = new THREE.Mesh(mEyeGeo, mEyeMat); mEyeR.position.set(-0.2, 0.2, -0.4); mouseBody.add(mEyeR);
+            const mEyeL = new THREE.Mesh(mEyeGeo, mEyeMat); 
+            mEyeL.position.set(0.1, 0.45, -0.28); 
+            mEyeL.rotation.x = -Math.PI / 16;
+            group.add(mEyeL);
             
-            const mTailGeo = new THREE.CylinderGeometry(0.05, 0.02, 1.2);
-            const mTail = createSegment(mTailGeo, mouseMatSolid, mouseMatWire);
-            mTail.position.set(0, -0.2, 0.5); mTail.rotation.x = Math.PI/4;
-            mouseBody.add(mTail);
+            const mEyeR = new THREE.Mesh(mEyeGeo, mEyeMat); 
+            mEyeR.position.set(-0.1, 0.45, -0.28); 
+            mEyeR.rotation.x = -Math.PI / 16;
+            group.add(mEyeR);
             
-            group.add(mouseBody);
+            // Hips (Pinggul)
+            const hipGeo = new THREE.SphereGeometry(0.26, 16, 16);
+            const hips = createSegment(hipGeo, mouseMatSolid, mouseMatWire);
+            hips.position.set(0, -0.3, 0);
+            group.add(hips);
+
+            // Arms with Elbows (Tangan dengan Siku)
+            const upperArmGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.2, 8);
+            upperArmGeo.translate(0, -0.1, 0); // Origin at shoulder
             
+            const lowerArmGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.25, 8);
+            lowerArmGeo.translate(0, -0.125, 0); // Origin at elbow
+
+            // Left Arm
+            const armL = createSegment(upperArmGeo, mouseMatSolid, mouseMatWire);
+            armL.position.set(0.22, 0.1, 0); // Shoulder
+            armL.rotation.z = Math.PI / 3; // Rentang ke luar
+            armL.rotation.x = Math.PI / 8; 
+            group.add(armL);
+            
+            const forearmL = createSegment(lowerArmGeo, mouseMatSolid, mouseMatWire);
+            forearmL.position.set(0, -0.2, 0); // End of upper arm
+            forearmL.rotation.z = -Math.PI / 3; // Luruskan ke bawah
+            forearmL.rotation.x = -Math.PI / 2.5; // Tekuk ke depan (Siku)
+            armL.add(forearmL);
+
+            // Right Arm
+            const armR = createSegment(upperArmGeo, mouseMatSolid, mouseMatWire);
+            armR.position.set(-0.22, 0.1, 0);
+            armR.rotation.z = -Math.PI / 3;
+            armR.rotation.x = Math.PI / 8;
+            group.add(armR);
+
+            const forearmR = createSegment(lowerArmGeo, mouseMatSolid, mouseMatWire);
+            forearmR.position.set(0, -0.2, 0);
+            forearmR.rotation.z = Math.PI / 3;
+            forearmR.rotation.x = -Math.PI / 2.5;
+            armR.add(forearmR);
+
+            // Hands (Sarung Tangan)
+            const pawGeo = new THREE.SphereGeometry(0.1, 12, 12);
+            const handL = createSegment(pawGeo, mouseMatSolid, mouseMatWire);
+            handL.position.set(0, -0.25, 0);
+            forearmL.add(handL);
+
+            const handR = createSegment(pawGeo, mouseMatSolid, mouseMatWire);
+            handR.position.set(0, -0.25, 0);
+            forearmR.add(handR);
+
+            // Legs (Kaki)
+            const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.25, 8);
+            legGeo.translate(0, -0.125, 0); // Origin at hip
+
+            const legL = createSegment(legGeo, mouseMatSolid, mouseMatWire);
+            legL.position.set(0.12, -0.35, 0);
+            legL.rotation.x = Math.PI / 16;
+            group.add(legL);
+            
+            const legR = createSegment(legGeo, mouseMatSolid, mouseMatWire);
+            legR.position.set(-0.12, -0.35, 0);
+            legR.rotation.x = Math.PI / 16;
+            group.add(legR);
+
+            // Feet (Sepatu)
+            const footGeo = new THREE.SphereGeometry(0.12, 12, 12);
+            footGeo.scale(1, 0.6, 1.3);
+            const footL = createSegment(footGeo, mouseMatSolid, mouseMatWire);
+            footL.position.set(0, -0.25, -0.05); // Ujung kaki
+            legL.add(footL);
+
+            const footR = createSegment(footGeo, mouseMatSolid, mouseMatWire);
+            footR.position.set(0, -0.25, -0.05);
+            legR.add(footR);
+
             const pLight = new THREE.PointLight(0xff66b2, 2, 20);
+            pLight.position.set(0, 0.5, 0);
             group.add(pLight);
 
             return group;
@@ -926,7 +1147,7 @@
         }
 
         class PowerUp {
-            constructor(type) {
+            constructor(type, spawnPos) {
                 this.type = type; // 0: Health, 1: EMP Refresh
                 this.active = true;
                 const geo = new THREE.TetrahedronGeometry(2.5, 0); 
@@ -940,7 +1161,11 @@
                 const pLight = new THREE.PointLight(color, 2, 20);
                 this.mesh.add(pLight);
 
-                this.mesh.position.set((Math.random()-0.5)*BOUNDARY_X*2, Math.random() * 14 - 4, -150);
+                if (spawnPos) {
+                    this.mesh.position.copy(spawnPos);
+                } else {
+                    this.mesh.position.set((Math.random()-0.5)*BOUNDARY_X*2, Math.random() * 14 - 4, -150);
+                }
                 scene.add(this.mesh);
             }
             update(dt) {
@@ -1009,6 +1234,7 @@
                 this.mesh.position.set((Math.random()-0.5)*BOUNDARY_X*2.5, Math.random() * 14 - 4, -150);
                 scene.add(this.mesh);
                 
+                // Asteroid tipe 1 (Homing) diperlambat base speed-nya agar menjadi ranjau pelacak
                 this.baseSpeed = (type === 0 ? 25 : 15) + (waveFactor * 1.5);
                 this.rotSpeed = new THREE.Vector3(Math.random(), Math.random(), Math.random()).multiplyScalar(2);
             }
@@ -1053,7 +1279,7 @@
                 this.hp = this.maxHp;
                 this.state = 'entering'; // entering, attacking
                 this.timer = 0;
-                this.bossType = Math.floor(Math.random() * 5); // Now 5 Boss types: 0, 1, 2, 3, or 4
+                this.bossType = Math.floor(Math.random() * 7); // Now 7 Boss types: 0 to 6
                 
                 // Construct a complex geometric boss
                 this.mesh = new THREE.Group();
@@ -1105,7 +1331,7 @@
                     const ringGeo = new THREE.TorusGeometry(6, 0.2, 8, 50);
                     this.ring1 = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true }));
                     this.mesh.add(this.ring1);
-                } else {
+                } else if (this.bossType === 4) {
                     const coreGeo = new THREE.DodecahedronGeometry(8);
                     const coreMat = new THREE.MeshBasicMaterial({ color: 0x001111 });
                     const coreWire = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.8 });
@@ -1115,6 +1341,31 @@
                     
                     const ringGeo = new THREE.IcosahedronGeometry(12, 1);
                     this.ring1 = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, opacity: 0.3, transparent: true }));
+                    this.mesh.add(this.ring1);
+                } else if (this.bossType === 5) {
+                    // Boss Type 5: Orange Crystal (Teleporter)
+                    const coreGeo = new THREE.OctahedronGeometry(6, 0);
+                    const coreMat = new THREE.MeshBasicMaterial({ color: 0x221100 });
+                    const coreWire = new THREE.MeshBasicMaterial({ color: 0xffa500, wireframe: true, transparent: true, opacity: 0.8 });
+                    this.core = new THREE.Mesh(coreGeo, coreMat);
+                    this.core.add(new THREE.Mesh(coreGeo, coreWire));
+                    this.mesh.add(this.core);
+
+                    const ringGeo = new THREE.TorusGeometry(10, 0.5, 8, 8);
+                    this.ring1 = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffa500, wireframe: true, transparent: true, opacity: 0.4 }));
+                    this.ring1.rotation.x = Math.PI / 2;
+                    this.mesh.add(this.ring1);
+                } else {
+                    // Boss Type 6: White Star (Nova Spinner)
+                    const coreGeo = new THREE.IcosahedronGeometry(7, 0);
+                    const coreMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+                    const coreWire = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 });
+                    this.core = new THREE.Mesh(coreGeo, coreMat);
+                    this.core.add(new THREE.Mesh(coreGeo, coreWire));
+                    this.mesh.add(this.core);
+                    
+                    const ringGeo = new THREE.TorusKnotGeometry(9, 0.2, 100, 16);
+                    this.ring1 = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.4 }));
                     this.mesh.add(this.ring1);
                 }
 
@@ -1129,7 +1380,7 @@
             update(dt) {
                 this.timer += dt;
                 
-                const bossColors = [COLOR_BOSS, 0xff003c, 0x39ff14, 0xffff00, 0x00ffff];
+                const bossColors = [COLOR_BOSS, 0xff003c, 0x39ff14, 0xffff00, 0x00ffff, 0xffa500, 0xffffff];
                 const activeColor = bossColors[this.bossType];
                 
                 if (this.state === 'exploding') {
@@ -1165,10 +1416,18 @@
                 } else if (this.bossType === 3) {
                     this.core.rotation.x += 2 * dt;
                     this.ring1.rotation.y += 3 * dt;
-                } else {
+                } else if (this.bossType === 4) {
                     this.core.rotation.y += 0.5 * dt;
                     this.core.rotation.z += 0.2 * dt;
                     this.ring1.rotation.x -= 0.5 * dt;
+                } else if (this.bossType === 5) {
+                    this.core.rotation.y += 3 * dt;
+                    this.ring1.rotation.z += 1 * dt;
+                    this.ring1.rotation.x += 1 * dt;
+                } else {
+                    this.core.rotation.z += 2 * dt;
+                    this.core.rotation.x += 2 * dt;
+                    this.ring1.rotation.y += 2 * dt;
                 }
 
                 if(this.state === 'entering') {
@@ -1187,9 +1446,19 @@
                     } else if (this.bossType === 3) {
                         this.mesh.position.x = Math.sin(this.timer * 3) * 10;
                         this.mesh.position.y = Math.sin(this.timer * 6) * 5;
-                    } else {
+                    } else if (this.bossType === 4) {
                         this.mesh.position.x = Math.sin(this.timer * 0.5) * 5;
                         this.mesh.position.y = Math.cos(this.timer * 0.3) * 2;
+                    } else if (this.bossType === 5) {
+                        // Quick teleport dash behavior
+                        if (Math.floor(this.timer * 2) % 3 === 0 && this.timer % 0.5 < 0.1) {
+                             this.mesh.position.x = (Math.random() - 0.5) * 30;
+                             this.mesh.position.y = (Math.random() - 0.5) * 10;
+                        }
+                    } else {
+                        // Smooth circular spin
+                        this.mesh.position.x = Math.sin(this.timer * 0.8) * 18;
+                        this.mesh.position.y = Math.cos(this.timer * 0.8) * 8;
                     }
 
                     if(this.timer % 1.5 < dt) {
@@ -1197,7 +1466,9 @@
                         else if (this.bossType === 1) this.fireSpread();
                         else if (this.bossType === 2) this.fireSpiral();
                         else if (this.bossType === 3) this.fireLaserBurst();
-                        else this.fireSineStream();
+                        else if (this.bossType === 4) this.fireSineStream();
+                        else if (this.bossType === 5) this.fireHomingCluster();
+                        else this.fireNova();
                         AudioSys.playExplosion(0.2);
                     }
                 }
@@ -1255,12 +1526,32 @@
                 }
             }
 
+            fireHomingCluster() {
+                if (player.isDead) return;
+                const bulletCount = 10;
+                for(let i=0; i<bulletCount; i++) {
+                    const dx = player.mesh.position.x - this.mesh.position.x;
+                    const dy = player.mesh.position.y - this.mesh.position.y;
+                    const dir = new THREE.Vector3(dx + (Math.random()-0.5)*15, dy + (Math.random()-0.5)*15, 70).normalize();
+                    enemyBullets.push(new Bullet(this.mesh.position.clone(), true, dir, 60, 0xffa500));
+                }
+            }
+
+            fireNova() {
+                const bulletCount = 24 + Math.floor(wave / 5) * 2;
+                for(let i=0; i<bulletCount; i++) {
+                    const angle = (i / bulletCount) * Math.PI * 2 + this.timer;
+                    const dir = new THREE.Vector3(Math.cos(angle)*1.2, Math.sin(angle)*1.2, 2.5).normalize();
+                    enemyBullets.push(new Bullet(this.mesh.position.clone(), true, dir, 50, 0xffffff));
+                }
+            }
+
             hit(damage) {
                 this.hp -= damage;
                 this.updateHPBar();
                 this.core.children[0].material.color.setHex(0xffffff);
                 
-                const bossColors = [COLOR_BOSS, 0xff003c, 0x39ff14, 0xffff00, 0x00ffff];
+                const bossColors = [COLOR_BOSS, 0xff003c, 0x39ff14, 0xffff00, 0x00ffff, 0xffa500, 0xffffff];
                 const originalColor = bossColors[this.bossType];
                 
                 setTimeout(() => { if(this.active && this.core) this.core.children[0].material.color.setHex(originalColor); }, 50);
@@ -1268,6 +1559,10 @@
                 if(this.hp <= 0 && this.state !== 'exploding') {
                     this.state = 'exploding';
                     this.explodeTimer = 0;
+                    
+                    // FIX: Kunci Wave System Secara Instan Agar Tidak Muncul Boss Ganda!
+                    isWaveTransitioning = true; 
+                    
                     document.getElementById('boss-ui').style.display = 'none';
                     addScore(5000 * Math.floor(wave/5));
                     enemyBullets.forEach(b => b.destroy()); enemyBullets = [];
@@ -1291,6 +1586,15 @@
                         createExplosion(new THREE.Vector3(randX, randY, randZ), 0xffffff, 150);
                         if(window.AudioSys) AudioSys.playExplosion(0.5);
                     }, Math.random() * 1000);
+                }
+
+                // Munculkan banyak item Health setelah Boss mati
+                for (let i = 0; i < 8; i++) {
+                    const dropPos = this.mesh.position.clone();
+                    dropPos.x += (Math.random() - 0.5) * 15;
+                    dropPos.y += (Math.random() - 0.5) * 15;
+                    dropPos.z += (Math.random() * 10);
+                    powerUps.push(new PowerUp(0, dropPos)); // Type 0 is Health
                 }
 
                 AudioSys.playExplosion(4.0);
@@ -1409,7 +1713,7 @@
                     elephantGroup.earL.rotation.y = -0.3 + Math.sin(timeNow * 4) * 0.25; 
                     elephantGroup.earR.rotation.y = 0.3 - Math.sin(timeNow * 4) * 0.25; 
                     
-                    if (isInteracting) {
+                    if (isInteracting || joyActive) {
                         elephantGroup.leg1.position.z = 1 + Math.sin(timeNow * 8) * 0.2;
                         elephantGroup.leg2.position.z = 1 - Math.sin(timeNow * 8) * 0.2;
                         elephantGroup.leg3.position.z = -1 - Math.sin(timeNow * 8) * 0.2;
@@ -1420,8 +1724,22 @@
                     }
                 }
 
-                // Player Movement
-                if (isInteracting) player.mesh.position.lerp(targetPosition, 10 * dt);
+                // Player Movement (Kombinasi Drag Atau Joystick)
+                if (joyActive) {
+                    // Logic Movement Analog Sensitif
+                    const analogSpeed = 50 * dt; 
+                    targetPosition.x += joyPos.x * analogSpeed;
+                    targetPosition.y -= joyPos.y * analogSpeed; // Y dibalik krn origin CSS vs 3D
+                    
+                    // Clamp posisi agar tetap dalam boundary
+                    targetPosition.x = Math.max(-BOUNDARY_X, Math.min(BOUNDARY_X, targetPosition.x));
+                    targetPosition.y = Math.max(-BOUNDARY_Y + 5, Math.min(BOUNDARY_Y, targetPosition.y));
+                }
+                
+                if (isInteracting || joyActive) {
+                    player.mesh.position.lerp(targetPosition, 10 * dt);
+                }
+                
                 player.mesh.rotation.z = THREE.MathUtils.lerp(player.mesh.rotation.z, (targetPosition.x - player.mesh.position.x) * -0.1, 10 * dt);
                 player.mesh.rotation.x = 0.0; 
 
@@ -1434,7 +1752,7 @@
                     
                     const targetPos = player.mesh.position.clone().add(offset);
                     
-                    // Tracker posisi utama naga, Z selalu sama (tidak ada bobbing)
+                    // Tracker posisi utama naga
                     p.position.lerp(targetPos, 4 * dt);
                     p.position.z = targetPos.z; 
                     
@@ -1772,6 +2090,9 @@
             
             const maxHp = 100 + (upgrades.health * 20);
             score = 0; wave = 1; playerHealth = maxHp; enemySpawnRate = 1.0; isInteracting = false;
+            joyActive = false;
+            joyPos = { x: 0, y: 0 };
+            
             skills.shield.cd = 0; skills.emp.cd = 0;
             updateSkillUI('shield'); updateSkillUI('emp');
             
@@ -1824,11 +2145,14 @@
         function pauseGame() {
             if (!isPlaying || activeBoss?.state === 'exploding' || player.isDead) return;
             isPlaying = false;
+            joyActive = false; // Reset analog saat pause
+            document.getElementById('joystick-knob').style.transform = `translate(-50%, -50%)`;
             document.getElementById('pause-screen').classList.remove('hidden');
         }
 
         function gameOver() {
             isPlaying = false;
+            joyActive = false;
 
             const earned = Math.floor(score / 10);
             credits += earned;
