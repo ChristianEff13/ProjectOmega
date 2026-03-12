@@ -192,12 +192,16 @@
 
         /* Pause UI */
         #pause-btn {
-            background: rgba(0, 243, 255, 0.1); border: 2px solid var(--neon-blue);
-            color: white; padding: 10px 20px; font-weight: bold; cursor: pointer;
-            border-radius: 5px; text-shadow: 0 0 5px var(--neon-blue);
-            backdrop-filter: blur(5px); transition: all 0.2s;
+            background: transparent; border: none;
+            color: var(--neon-blue); padding: 10px; font-weight: bold; cursor: pointer;
+            font-size: 1.5rem; text-shadow: 0 0 10px var(--neon-blue);
+            transition: all 0.2s; font-family: inherit; letter-spacing: 2px;
         }
-        #pause-btn:hover, #pause-btn:active { background: var(--neon-blue); color: black; }
+        #pause-btn:hover, #pause-btn:active { 
+            text-shadow: 0 0 20px var(--neon-blue), 0 0 30px white; 
+            color: white; 
+            background: transparent;
+        }
 
         /* Store UI */
         .store-grid {
@@ -785,7 +789,7 @@
                 this.hp = this.maxHp;
                 this.state = 'entering'; // entering, attacking
                 this.timer = 0;
-                this.bossType = Math.floor(Math.random() * 2); // 0 or 1
+                this.bossType = Math.floor(Math.random() * 3); // Now 3 Boss types: 0, 1, or 2
                 
                 // Construct a complex geometric boss
                 this.mesh = new THREE.Group();
@@ -804,7 +808,7 @@
                     this.ring2 = new THREE.Mesh(ringGeo, coreWire);
                     this.ring2.rotation.x = Math.PI / 2;
                     this.mesh.add(this.ring1); this.mesh.add(this.ring2);
-                } else {
+                } else if (this.bossType === 1) {
                     const coreGeo = new THREE.BoxGeometry(7, 7, 7);
                     const coreMat = new THREE.MeshBasicMaterial({ color: 0x110000 });
                     const coreWire = new THREE.MeshBasicMaterial({ color: 0xff003c, wireframe: true, transparent: true, opacity: 0.8 });
@@ -814,6 +818,18 @@
                     
                     const ringGeo = new THREE.OctahedronGeometry(10, 0);
                     this.ring1 = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xff003c, wireframe: true, transparent: true, opacity: 0.4 }));
+                    this.mesh.add(this.ring1);
+                } else {
+                    // Boss Type 2: Green Diamond
+                    const coreGeo = new THREE.TetrahedronGeometry(6, 1);
+                    const coreMat = new THREE.MeshBasicMaterial({ color: 0x001100 });
+                    const coreWire = new THREE.MeshBasicMaterial({ color: 0x39ff14, wireframe: true, transparent: true, opacity: 0.8 });
+                    this.core = new THREE.Mesh(coreGeo, coreMat);
+                    this.core.add(new THREE.Mesh(coreGeo, coreWire));
+                    this.mesh.add(this.core);
+
+                    const ringGeo = new THREE.TorusKnotGeometry(8, 0.5, 64, 8);
+                    this.ring1 = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x39ff14, wireframe: true, transparent: true, opacity: 0.4 }));
                     this.mesh.add(this.ring1);
                 }
 
@@ -834,12 +850,13 @@
                     this.mesh.position.x += (Math.random() - 0.5) * 3;
                     this.mesh.position.y += (Math.random() - 0.5) * 3;
                     
+                    const explodeColor = this.bossType === 0 ? COLOR_BOSS : (this.bossType === 1 ? 0xff003c : 0x39ff14);
                     if (this.explodeTimer % 0.15 < dt) {
-                        createExplosion(this.mesh.position.clone().add(new THREE.Vector3((Math.random()-0.5)*10, (Math.random()-0.5)*10, (Math.random()-0.5)*10)), COLOR_BOSS, 20);
+                        createExplosion(this.mesh.position.clone().add(new THREE.Vector3((Math.random()-0.5)*10, (Math.random()-0.5)*10, (Math.random()-0.5)*10)), explodeColor, 20);
                         AudioSys.playExplosion(0.5);
                     }
                     if (this.explodeTimer >= 2.0) {
-                        this.finishExplode();
+                        this.finishExplode(explodeColor);
                     }
                     return;
                 }
@@ -850,10 +867,15 @@
                     this.ring1.rotation.y -= 2 * dt;
                     this.ring1.rotation.z += 1 * dt;
                     this.ring2.rotation.x += 2 * dt;
-                } else {
+                } else if (this.bossType === 1) {
                     this.core.rotation.x += 1 * dt;
                     this.core.rotation.y += 1 * dt;
                     this.ring1.rotation.z += 0.5 * dt;
+                } else {
+                    this.core.rotation.y -= 1.5 * dt;
+                    this.core.rotation.z += 1.5 * dt;
+                    this.ring1.rotation.x += 1 * dt;
+                    this.ring1.rotation.y -= 1 * dt;
                 }
 
                 if(this.state === 'entering') {
@@ -864,16 +886,21 @@
                     if (this.bossType === 0) {
                         this.mesh.position.x = Math.sin(this.timer * 0.5) * 15;
                         this.mesh.position.y = Math.cos(this.timer * 0.7) * 5;
-                    } else {
+                    } else if (this.bossType === 1) {
                         // Aggressive side-to-side sweeping
                         this.mesh.position.x = Math.sin(this.timer * 1.5) * 20;
                         this.mesh.position.y = Math.sin(this.timer * 3.0) * 3;
+                    } else {
+                        // Teleporting/Erratic zigzag
+                        this.mesh.position.x = Math.sin(this.timer * 2.5) * 12 + Math.cos(this.timer * 4) * 8;
+                        this.mesh.position.y = Math.cos(this.timer * 2) * 6;
                     }
 
                     // Bullet Hell Pattern
                     if(this.timer % 1.5 < dt) {
                         if (this.bossType === 0) this.fireRing();
-                        else this.fireSpread();
+                        else if (this.bossType === 1) this.fireSpread();
+                        else this.fireSpiral(); // Tipe 3 menembak spiral
                         AudioSys.playExplosion(0.2);
                     }
                 }
@@ -898,11 +925,21 @@
                 }
             }
 
+            fireSpiral() {
+                const bulletCount = 18 + Math.floor(wave / 5);
+                for(let i=0; i<bulletCount; i++) {
+                    // Membentuk tembakan melingkar spiral
+                    const angle = (i / bulletCount) * Math.PI * 2 + (this.timer * 2); 
+                    const dir = new THREE.Vector3(Math.cos(angle)*1.5, Math.sin(angle)*1.5, 1).normalize();
+                    enemyBullets.push(new Bullet(this.mesh.position.clone(), true, dir, 35, 0x39ff14));
+                }
+            }
+
             hit(damage) {
                 this.hp -= damage;
                 this.updateHPBar();
                 this.core.children[0].material.color.setHex(0xffffff);
-                const originalColor = this.bossType === 0 ? COLOR_BOSS : 0xff003c;
+                const originalColor = this.bossType === 0 ? COLOR_BOSS : (this.bossType === 1 ? 0xff003c : 0x39ff14);
                 setTimeout(() => { if(this.active && this.core) this.core.children[0].material.color.setHex(originalColor); }, 50);
 
                 if(this.hp <= 0 && this.state !== 'exploding') {
@@ -919,9 +956,9 @@
                 document.getElementById('boss-hp-bar').style.width = pct + '%';
             }
 
-            finishExplode() {
+            finishExplode(explodeColor) {
                 this.active = false;
-                createExplosion(this.mesh.position, COLOR_BOSS, 300);
+                createExplosion(this.mesh.position, explodeColor, 300);
                 AudioSys.playExplosion(3.0);
                 this.destroy();
                 score += wave * 1000;
